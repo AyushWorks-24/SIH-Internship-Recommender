@@ -1,13 +1,13 @@
-# api.py
+
 
 from flask import Flask, request, jsonify
 from engine import RecommendationEngine
 
-# --- Initialize the Flask App and the AI Engine ---
+
 print("Initializing Flask app and loading AI engine...")
 app = Flask(__name__)
 
-# Load the engine once when the server starts for best performance
+
 try:
     engine = RecommendationEngine(student_filepath='students.csv', internship_filepath='internships.csv')
     print("✅ Engine loaded successfully.")
@@ -16,7 +16,7 @@ except Exception as e:
     engine = None
 
 
-# --- Define API Endpoints (The URLs) ---
+
 
 @app.route('/')
 def home():
@@ -28,7 +28,7 @@ def get_recommendations_api():
     if not engine:
         return jsonify({"error": "Engine not initialized"}), 500
 
-    # Get student_id from the URL query (e.g., /recommendations?student_id=101)
+    
     student_id = request.args.get('student_id', type=int)
 
     if student_id is None:
@@ -41,7 +41,7 @@ def get_recommendations_api():
 
     recommendations = engine.get_recommendations(student_index)
 
-    # Convert the pandas DataFrame to a list of dictionaries (JSON)
+    
     return jsonify(recommendations.to_dict('records'))
 
 
@@ -70,3 +70,4 @@ def get_skill_gap_api():
 # --- Run the Flask App Server ---
 if __name__ == '__main__':
     app.run(port=5000, debug=True)
+
