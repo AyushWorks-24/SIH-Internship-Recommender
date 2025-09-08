@@ -1,4 +1,4 @@
-# generate_demo_data.py
+
 import pandas as pd
 from faker import Faker
 import random
@@ -10,7 +10,7 @@ def create_demo_data(num_students=101, num_internships=41):
     """
     fake = Faker('en_IN')
 
-    # --- Data Definitions ---
+    
     CITY_STATE_MAP = {
         'Bangalore': 'Karnataka', 'Pune': 'Maharashtra', 'Hyderabad': 'Telangana',
         'Delhi': 'Delhi', 'Mumbai': 'Maharashtra', 'Chennai': 'Tamil Nadu',
@@ -35,7 +35,7 @@ def create_demo_data(num_students=101, num_internships=41):
         'Civil Engineering', 'Deep Learning', 'Data Science', 'Network Engineering', 'Backend Development'
     ]
 
-    # --- Generate Student Data ---
+   
     student_data = []
     for i in range(101, 101 + num_students):
         student_data.append({
@@ -47,7 +47,7 @@ def create_demo_data(num_students=101, num_internships=41):
     students_df.to_csv('students.csv', index=False)
     print(f"✅ Successfully created students.csv with {len(students_df)} entries.")
 
-    # --- Generate Internship Data ---
+    
     internship_data = []
     for i in range(5001, 5001 + num_internships):
         location = random.choice(locations)
@@ -65,4 +65,5 @@ def create_demo_data(num_students=101, num_internships=41):
 
 
 if __name__ == "__main__":
+
     create_demo_data(num_students=101, num_internships=41)
