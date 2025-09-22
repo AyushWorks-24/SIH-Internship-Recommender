@@ -12,7 +12,7 @@ import time
 # --- Page Setup ---
 st.set_page_config(
     page_title="AVSAR AI | Welcome",
-    page_icon="🚀",  # <-- This line is the fix
+    page_icon="🚀",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -168,9 +168,10 @@ h4 {
     line-height: 1.6;
     color: #666;
 }
-
 </style>
 """, unsafe_allow_html=True)
+
+
 
 
 # --- Initialize Engines (Cached for performance) ---
@@ -695,3 +696,4 @@ elif st.session_state.role == "Admin":
         else:
             log_df = pd.DataFrame(st.session_state.application_log)
             st.dataframe(log_df.sort_values(by="Applied At", ascending=False), use_container_width=True)
+
