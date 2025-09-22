@@ -17,159 +17,31 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- Custom CSS for animations and new styles ---
+# --- Custom CSS (onclick removed) ---
 st.markdown("""
 <style>
-/* Base Styling & Fonts */
-html, body, [class*="st-emotion-cache"] {
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    color: #333;
-}
-
-/* Card hover effect */
-.st-emotion-cache-183lzff { /* This targets st.container(border=True) */
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    border-radius: 12px;
-    background-color: #ffffff; /* Ensure cards have a white background */
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); /* Subtle initial shadow */
-    border: 1px solid #e0e0e0; /* Light border */
-}
-.st-emotion-cache-183lzff:hover {
-    transform: translateY(-5px); /* Lift effect */
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); /* More pronounced shadow */
-}
-
-/* Main button styling */
-.stButton>button {
-    border-radius: 10px;
-    font-weight: bold;
-    padding: 0.75rem 1.5rem;
-    transition: all 0.2s ease-in-out;
-}
-.stButton>button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
-
-/* Primary button specific styling */
-.stButton>button.primary { /* Note: Streamlit sets type="primary" as a class now */
-    background-color: #4CAF50; /* A fresh green */
-    color: white;
-    border: none;
-}
-.stButton>button.primary:hover {
-    background-color: #45a049;
-    color: white;
-}
-
-/* Secondary button styling */
-.stButton>button:not(.primary) {
-    background-color: #f0f2f6; /* Light grey */
-    color: #333;
-    border: 1px solid #d0d3d8;
-}
-.stButton>button:not(.primary):hover {
-    background-color: #e0e0e0;
-    color: #333;
-}
-
-/* Section titles */
-h1 {
-    color: #0056b3; /* Darker blue for main title */
-    font-size: 3.2rem;
-    text-align: center;
-    font-weight: 800;
-    line-height: 1.2;
-}
-h2 {
-    color: #007bff; /* Bright blue for sub-sections */
-    font-size: 2.2rem;
-    margin-top: 2.5rem;
-    margin-bottom: 1.5rem;
-    font-weight: 700;
-}
-h3 {
-    color: #007bff;
-    font-size: 1.8rem;
-    font-weight: 600;
-}
-h4 {
-    color: #333;
-    font-size: 1.4rem;
-    font-weight: 600;
-}
-
-/* Hero Tagline */
-.tagline {
-    font-size: 1.6rem;
-    text-align: center;
-    color: #555;
-    margin-bottom: 2rem;
-    font-weight: 300;
-}
-
-/* Custom 3D-like Icon Cards for Role Selection */
+/* Your existing CSS can remain, but the role-card is now just for styling */
 .role-card {
-    background-color: #f8f9fa; /* Light background for the card */
+    background-color: #f8f9fa;
     border-radius: 15px;
     padding: 30px;
     text-align: center;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
     transition: all 0.3s ease;
-    cursor: pointer;
     border: 2px solid transparent;
 }
 .role-card:hover {
     transform: translateY(-8px);
     box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
-    border-color: #007bff; /* Highlight border on hover */
+    border-color: #007bff;
 }
 .role-icon {
-    font-size: 4rem; /* Larger icon size */
+    font-size: 4rem;
     margin-bottom: 15px;
-    /* Basic 3D effect with text-shadow */
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2), 
-                 -2px -2px 4px rgba(255, 255, 255, 0.8);
-    display: inline-block; /* Required for transform */
-    transition: transform 0.3s ease;
-}
-.role-card:hover .role-icon {
-    transform: scale(1.1); /* Slight bounce on icon hover */
-}
-.role-student .role-icon { color: #28a745; } /* Green for student */
-.role-admin .role-icon { color: #007bff; }  /* Blue for admin */
-
-/* Custom Container Backgrounds */
-.how-it-works-section {
-    background-color: #f0f8ff; /* Light blue background */
-    padding: 3rem 0;
-    border-radius: 15px;
-    margin-top: 3rem;
-    margin-bottom: 3rem;
-}
-.features-section {
-    background-color: #fff9e6; /* Light yellow background */
-    padding: 3rem 0;
-    border-radius: 15px;
-    margin-top: 3rem;
-    margin-bottom: 3rem;
-}
-
-/* Center text within columns for sections */
-.st-emotion-cache-1wv9vxf.e1f1d6z32 { /* Targeting columns */
-    text-align: center;
-}
-.st-emotion-cache-1wv9vxf.e1f1d6z32 h4 {
-    text-align: center;
-}
-.st-emotion-cache-1wv9vxf.e1f1d6z32 p {
-    text-align: center;
-    font-size: 1.1rem;
-    line-height: 1.6;
-    color: #666;
 }
 </style>
 """, unsafe_allow_html=True)
+
 
 
 
@@ -696,4 +568,5 @@ elif st.session_state.role == "Admin":
         else:
             log_df = pd.DataFrame(st.session_state.application_log)
             st.dataframe(log_df.sort_values(by="Applied At", ascending=False), use_container_width=True)
+
 
