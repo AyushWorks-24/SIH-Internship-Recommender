@@ -10,7 +10,12 @@ import random
 import time
 
 # --- Page Setup ---
-st.set_page_config(page_title="AVSAR AI | Welcome", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(
+    page_title="AVSAR AI | Welcome",
+    page_icon="🚀",  # <-- This line is the fix
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
 # --- Custom CSS for animations and new styles ---
 st.markdown("""
@@ -541,7 +546,7 @@ elif st.session_state.role == "Student":
                     student_info = engine.students_df.iloc[st.session_state.student_index].to_dict()
                 else:
                     student_info = st.session_state.new_profile_data
-                
+
                 p_col1, p_col2 = st.columns(2)
                 with p_col1:
                     st.info(f"**Name:** {student_info.get('name', 'N/A')}")
@@ -549,7 +554,7 @@ elif st.session_state.role == "Student":
                 with p_col2:
                     st.info(f"**CGPA:** {student_info.get('cgpa', 'N/A')}")
                     st.info(f"**Location Preference:** {student_info.get('location_preference', 'N/A')}")
-                
+
                 st.subheader("Skills Visualization")
                 student_skills = [s.strip() for s in student_info.get('skills', '').split(',')]
                 if student_skills and student_skills != ['']:
@@ -561,7 +566,7 @@ elif st.session_state.role == "Student":
                     fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 100])), showlegend=False,
                                       title="Your Skill Radar")
                     st.plotly_chart(fig, use_container_width=True)
-                
+
                 st.markdown("---")
                 with st.expander("✏️ Update My Profile"):
                     with st.form("update_profile_form"):
@@ -569,8 +574,9 @@ elif st.session_state.role == "Student":
                         updated_name = st.text_input("Name", value=student_info.get('name', ''))
                         updated_branch = st.text_input("Branch", value=student_info.get('branch', ''))
                         updated_skills = st.text_area("Skills (comma-separated)", value=student_info.get('skills', ''))
-                        updated_location = st.text_input("Location Preference", value=student_info.get('location_preference', ''))
-                        
+                        updated_location = st.text_input("Location Preference",
+                                                         value=student_info.get('location_preference', ''))
+
                         submitted = st.form_submit_button("Save Changes")
                         if submitted:
                             updated_data = {
