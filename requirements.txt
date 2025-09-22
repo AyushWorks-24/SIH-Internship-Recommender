@@ -1,8 +1,6 @@
-pandas
-numpy
 streamlit
-faker
+pandas
 scikit-learn
 plotly
-gnews
-google-generativeai
+plotly-express
+faker
