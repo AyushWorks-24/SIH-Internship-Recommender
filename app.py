@@ -1,4 +1,4 @@
-# app.py (Final Version with Innovative, Colorful, and 3D-Enhanced Landing Page)
+# app.py (Final, Complete, and Corrected Version)
 
 import streamlit as st
 import pandas as pd
@@ -7,6 +7,7 @@ from admin_engine import AnalyticsEngine
 import plotly.express as px
 import plotly.graph_objects as go
 import random
+import time
 
 # --- Page Setup ---
 st.set_page_config(page_title="AVSAR AI | Welcome", layout="wide", initial_sidebar_state="collapsed")
@@ -362,7 +363,7 @@ elif st.session_state.role == "Student":
     # --- Step 2 for Student: Show Dashboard after profile is set ---
     else:
         if st.session_state.pro_access:
-            # --- AVSAR PRO DASHBOARD ---
+            # --- AVSAR PRO DASHBOARD (RESTORED) ---
             st.title(f"🚀 AVSAR Pro Dashboard for {st.session_state.selected_student_name}")
             st.markdown("---")
             st.subheader("📊 Placement Readiness Dashboard")
@@ -537,26 +538,56 @@ elif st.session_state.role == "Student":
             with profile_tab:
                 st.header("My Skill Profile")
                 if st.session_state.student_index is not None:
-                    student_info = engine.students_df.iloc[st.session_state.student_index]
+                    student_info = engine.students_df.iloc[st.session_state.student_index].to_dict()
                 else:
-                    student_info = pd.Series(st.session_state.new_profile_data)
+                    student_info = st.session_state.new_profile_data
+                
                 p_col1, p_col2 = st.columns(2)
                 with p_col1:
-                    st.info(f"**Name:** {student_info['name']}")
-                    st.info(f"**Branch:** {student_info['branch']}")
+                    st.info(f"**Name:** {student_info.get('name', 'N/A')}")
+                    st.info(f"**Branch:** {student_info.get('branch', 'N/A')}")
                 with p_col2:
-                    st.info(f"**CGPA:** {student_info['cgpa']}")
-                    st.info(f"**Location Preference:** {student_info['location_preference']}")
+                    st.info(f"**CGPA:** {student_info.get('cgpa', 'N/A')}")
+                    st.info(f"**Location Preference:** {student_info.get('location_preference', 'N/A')}")
+                
                 st.subheader("Skills Visualization")
-                student_skills = [s.strip() for s in student_info['skills'].split(',')]
-                skill_levels = [random.randint(60, 95) for _ in student_skills]
-                fig = go.Figure()
-                fig.add_trace(
-                    go.Scatterpolar(r=skill_levels, theta=student_skills, fill='toself', name='Skill Proficiency',
-                                    line=dict(color='deepskyblue')))
-                fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 100])), showlegend=False,
-                                  title="Your Skill Radar")
-                st.plotly_chart(fig, use_container_width=True)
+                student_skills = [s.strip() for s in student_info.get('skills', '').split(',')]
+                if student_skills and student_skills != ['']:
+                    skill_levels = [random.randint(60, 95) for _ in student_skills]
+                    fig = go.Figure()
+                    fig.add_trace(
+                        go.Scatterpolar(r=skill_levels, theta=student_skills, fill='toself', name='Skill Proficiency',
+                                        line=dict(color='deepskyblue')))
+                    fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 100])), showlegend=False,
+                                      title="Your Skill Radar")
+                    st.plotly_chart(fig, use_container_width=True)
+                
+                st.markdown("---")
+                with st.expander("✏️ Update My Profile"):
+                    with st.form("update_profile_form"):
+                        st.write("Edit your details below and click save.")
+                        updated_name = st.text_input("Name", value=student_info.get('name', ''))
+                        updated_branch = st.text_input("Branch", value=student_info.get('branch', ''))
+                        updated_skills = st.text_area("Skills (comma-separated)", value=student_info.get('skills', ''))
+                        updated_location = st.text_input("Location Preference", value=student_info.get('location_preference', ''))
+                        
+                        submitted = st.form_submit_button("Save Changes")
+                        if submitted:
+                            updated_data = {
+                                "name": updated_name, "branch": updated_branch, "skills": updated_skills,
+                                "location_preference": updated_location, "cgpa": student_info.get('cgpa', 8.0)
+                            }
+                            if st.session_state.student_index is not None:
+                                for key, value in updated_data.items():
+                                    engine.students_df.loc[st.session_state.student_index, key] = value
+                            else:
+                                st.session_state.new_profile_data = updated_data
+                            st.session_state.selected_student_name = updated_name
+                            with st.spinner("Updating profile..."):
+                                time.sleep(1)
+                            st.success("Profile updated successfully!")
+                            st.toast("Your profile has been saved!", icon="✅")
+
 
 # =================================================================================================
 # --- VIEW 3: ADMIN DASHBOARD ---
