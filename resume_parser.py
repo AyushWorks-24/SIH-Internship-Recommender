@@ -7,7 +7,7 @@ from docx import Document
 import re
 
 # Load the spaCy model and skills from the JSON file
-nlp = spacy.load("en_core_web_lg")
+nlp = spacy.load("en_core_web_sm")
 with open('skills.json', 'r') as f:
     SKILL_LIST = json.load(f)
 
@@ -45,5 +45,6 @@ def extract_skills_from_resume(file_path):
         pattern = r"\b" + re.escape(skill) + r"\b"
         if re.search(pattern, text, re.IGNORECASE):
             found_skills.add(skill.capitalize()) # Standardize the skill format
+
 
     return sorted(list(found_skills))
