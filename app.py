@@ -175,23 +175,38 @@ h4 { color: #333; font-size: 1.4rem; font-weight: 600; }
 
 
 # --- Initialize Engines (Cached for performance) ---
-@st.cache_resource
-def load_engines():
-    """Load and initialize the recommendation and analytics engines."""
+# --- Optimized Data and Engine Loading ---
+
+# Cache the data loading separately. This is very efficient.
+@st.cache_data
+def load_data():
+    """Loads the CSV files into pandas DataFrames."""
     try:
-        recommendation_engine = RecommendationEngine(student_filepath='students.csv',
-                                                     internship_filepath='internships.csv')
-        analytics_engine = AnalyticsEngine(recommendation_engine)
-        return recommendation_engine, analytics_engine
-    except FileNotFoundError:
-        st.error("Dataset files (students.csv, internships.csv) not found.")
+        students_df = pd.read_csv('students.csv')
+        internships_df = pd.read_csv('internships.csv')
+        return students_df, internships_df
+    except FileNotFoundError as e:
+        st.error(f"Error loading data file: {e}")
         return None, None
 
+# Cache the main recommendation engine resource.
+@st.cache_resource
+def load_recommendation_engine(students_df, internships_df):
+    """Initializes the main recommendation engine."""
+    return RecommendationEngine(students_df, internships_df)
 
-engine, analytics_engine = load_engines()
+# --- Main App Logic ---
+students_df, internships_df = load_data()
 
-if not engine or not analytics_engine:
+if students_df is None or internships_df is None:
+    st.error("Could not load necessary data. The app cannot continue.")
     st.stop()
+
+# Load the main engine
+engine = load_recommendation_engine(students_df, internships_df)
+
+# IMPORTANT: We will now load the analytics_engine ONLY when the admin logs in.
+# So, we remove it from the initial loading.
 
 # --- Initialize Session State ---
 if 'role' not in st.session_state:
@@ -716,3 +731,4 @@ elif st.session_state.role == "Admin":
         else:
             log_df = pd.DataFrame(st.session_state.application_log)
             st.dataframe(log_df.sort_values(by="Applied At", ascending=False), use_container_width=True)
+
