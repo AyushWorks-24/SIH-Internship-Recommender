@@ -1,0 +1,12 @@
+[
+  "python", "java", "c++", "javascript", "html", "css", "react", "angular", "vue",
+  "nodejs", "express", "django", "flask", "ruby on rails", "php", "laravel",
+  "sql", "mysql", "postgresql", "mongodb", "firebase", "aws", "azure", "gcp",
+  "docker", "kubernetes", "git", "github", "jenkins", "ci/cd", "agile", "scrum",
+  "machine learning", "deep learning", "tensorflow", "pytorch", "keras", "scikit-learn",
+  "pandas", "numpy", "matplotlib", "seaborn", "nlp", "natural language processing",
+  "computer vision", "opencv", "data analysis", "data science", "statistics",
+  "figma", "adobe xd", "sketch", "ui/ux", "product management", "project management",
+  "communication", "teamwork", "problem solving", "leadership", "data structures",
+  "algorithms", "linux", "rest api", "graphql", "microservices", "testing", "selenium"
+]
