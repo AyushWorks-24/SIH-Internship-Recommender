@@ -1,4 +1,4 @@
-# app.py (Final, Complete, and Corrected Version)
+# app.py (Final, Working Version with Enhanced UI)
 
 import streamlit as st
 import pandas as pd
@@ -8,6 +8,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 import random
 import time
+from resume_parser import extract_skills_from_resume
+import os
 
 # --- Page Setup ---
 st.set_page_config(
@@ -17,17 +19,134 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- Custom CSS (onclick removed) ---
+# --- ENHANCED Custom CSS ---
 st.markdown("""
 <style>
-/* Your existing CSS can remain, but the role-card is now just for styling */
-.role-card {
+/* === 1. PROFESSIONAL BACKGROUND === */
+[data-testid="stAppViewContainer"] > .main {
+    background: linear-gradient(-45deg, #f0f8ff, #ffffff, #e6e9f0, #f8f9fa);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+}
+
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* === 2. GENERAL FONT & THEME === */
+html, body, [class*="st-emotion-cache"] {
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #333;
+}
+
+/* === 3. ENHANCED SIDEBAR === */
+[data-testid="stSidebar"] {
+    background-color: #FDFDFD;
+    border-right: 1px solid #e0e0e0;
+}
+[data-testid="stSidebar"] h2 {
+    font-size: 1.8rem;
+}
+[data-testid="stSidebar"] .stButton>button {
+    background-color: #f0f2f6;
+    color: #333;
+    border: 1px solid #d0d3d8;
+    transition: all 0.2s ease-in-out;
+}
+[data-testid="stSidebar"] .stButton>button:hover {
+    background-color: #e0e0e0;
+    border-color: #007bff;
+    color: #007bff;
+}
+
+/* === 4. MODERN TABS === */
+[data-testid="stTabs"] button {
+    background-color: #f0f2f6;
+    border-radius: 8px;
+    padding: 10px 16px;
+    margin: 0 5px;
+    border: 1px solid #d0d3d8;
+    color: #555;
+    transition: all 0.2s ease;
+}
+[data-testid="stTabs"] button:hover {
+    background-color: #e0e0e0;
+    color: #007bff;
+}
+[data-testid="stTabs"] button[aria-selected="true"] {
+    background-color: #007bff;
+    color: white;
+    border: 1px solid #0056b3;
+}
+
+/* === 5. CUSTOM INPUT FIELDS (TEXT, SELECTBOX, FILE UPLOADER) === */
+[data-testid="stTextInput"] > div > div > input,
+[data-testid="stSelectbox"] > div > div,
+[data-testid="stFileUploader"] > div > div {
     background-color: #f8f9fa;
+    border: 1px solid #d0d3d8;
+    border-radius: 8px;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+}
+/* Focus effect for inputs */
+[data-testid="stTextInput"]:focus-within > div > div > input,
+[data-testid="stSelectbox"]:focus-within > div > div {
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
+}
+
+/* === 6. ENHANCED CARDS & CONTAINERS === */
+.st-emotion-cache-183lzff { /* This targets st.container(border=True) */
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border-radius: 12px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Slightly more pronounced base shadow */
+    border: 1px solid #e0e0e0;
+}
+.st-emotion-cache-183lzff:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15); /* Stronger hover shadow */
+}
+
+/* === 7. BUTTON STYLING === */
+.stButton>button {
+    border-radius: 10px;
+    font-weight: bold;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.2s ease-in-out;
+}
+.stButton>button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.stButton>button.primary {
+    background-color: #007bff;
+    color: white;
+    border: none;
+}
+.stButton>button.primary:hover {
+    background-color: #0056b3;
+    color: white;
+}
+
+/* === 8. TYPOGRAPHY === */
+h1 { color: #0056b3; font-size: 3.2rem; text-align: center; font-weight: 800; }
+h2 { color: #007bff; font-size: 2.2rem; margin-top: 2.5rem; margin-bottom: 1.5rem; font-weight: 700; }
+h3 { color: #007bff; font-size: 1.8rem; font-weight: 600; }
+h4 { color: #333; font-size: 1.4rem; font-weight: 600; }
+.tagline { font-size: 1.6rem; text-align: center; color: #555; margin-bottom: 2rem; font-weight: 300; }
+
+/* === 9. ROLE SELECTION CARDS === */
+.role-card {
+    background-color: #ffffff;
     border-radius: 15px;
     padding: 30px;
     text-align: center;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
     transition: all 0.3s ease;
+    cursor: pointer;
     border: 2px solid transparent;
 }
 .role-card:hover {
@@ -35,15 +154,24 @@ st.markdown("""
     box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
     border-color: #007bff;
 }
-.role-icon {
-    font-size: 4rem;
-    margin-bottom: 15px;
+.role-icon { font-size: 4rem; margin-bottom: 15px; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2), -2px -2px 4px rgba(255, 255, 255, 0.8); display: inline-block; transition: transform 0.3s ease; }
+.role-card:hover .role-icon { transform: scale(1.1); }
+.role-student .role-icon { color: #28a745; }
+.role-admin .role-icon { color: #007bff; }
+
+/* === 10. LANDING PAGE SECTIONS === */
+.how-it-works-section, .features-section {
+    padding: 3rem 1rem;
+    border-radius: 15px;
+    margin: 3rem 0;
+    background-color: rgba(255, 255, 255, 0.7); /* Make sections semi-transparent */
+    backdrop-filter: blur(10px); /* Frosted glass effect */
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
 }
+
 </style>
 """, unsafe_allow_html=True)
-
-
-
 
 
 # --- Initialize Engines (Cached for performance) ---
@@ -90,11 +218,10 @@ if 'application_log' not in st.session_state:
 api_key = st.secrets.get("GOOGLE_API_KEY")
 
 # =================================================================================================
-# --- VIEW 1: ROLE SELECTION LANDING PAGE (INNOVATIVE & 3D) ---
+# --- VIEW 1: ROLE SELECTION LANDING PAGE ---
 # =================================================================================================
 if st.session_state.role is None:
 
-    # --- 1. Hero Section with 3D-like Icons ---
     st.markdown("<h1>AVSAR AI</h1>", unsafe_allow_html=True)
     st.markdown("<p class='tagline'>Don't Just Find an Internship. Build Your Career.</p>", unsafe_allow_html=True)
     st.markdown("---")
@@ -112,7 +239,6 @@ if st.session_state.role is None:
             </div>
             """, unsafe_allow_html=True
         )
-        # Streamlit button to trigger the state change
         if st.button("Continue as Student", key="student_role_button", use_container_width=True, type="primary"):
             st.session_state.role = "Student"
             st.rerun()
@@ -128,42 +254,37 @@ if st.session_state.role is None:
             </div>
             """, unsafe_allow_html=True
         )
-        # Streamlit button to trigger the state change
         if st.button("Continue as Admin", key="admin_role_button", use_container_width=True):
             st.session_state.role = "Admin"
             st.rerun()
 
-    st.markdown("##")  # Adds some vertical space
+    st.markdown("##")
 
-    # --- 2. "How It Works" Section (with background color) ---
     st.markdown("<div class='how-it-works-section'>", unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align: center; color: #007bff;'>How AVSAR AI Works</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center;'>How AVSAR AI Works</h2>", unsafe_allow_html=True)
     hw_col1, hw_col2, hw_col3 = st.columns(3)
     with hw_col1:
         with st.container(border=True):
             st.markdown("<h4 style='text-align: center;'>1. Personalize Your Profile ✨</h4>", unsafe_allow_html=True)
             st.markdown(
-                "<p style='text-align: center;'>Tell us your skills and career goals, whether you're an existing student or creating a new profile.</p>",
+                "<p style='text-align: center; padding: 0 1rem;'>Upload your resume and our AI instantly builds your skill profile.</p>",
                 unsafe_allow_html=True)
     with hw_col2:
         with st.container(border=True):
             st.markdown("<h4 style='text-align: center;'>2. Get AI-Powered Matches 🎯</h4>", unsafe_allow_html=True)
             st.markdown(
-                "<p style='text-align: center;'>Our smart engine analyzes thousands of openings to find the perfect, hyper-personalized internships for you.</p>",
+                "<p style='text-align: center; padding: 0 1rem;'>Our smart engine finds the perfect, hyper-personalized internships for you.</p>",
                 unsafe_allow_html=True)
     with hw_col3:
         with st.container(border=True):
             st.markdown("<h4 style='text-align: center;'>3. Achieve Your Career Goals 🚀</h4>", unsafe_allow_html=True)
             st.markdown(
-                "<p style='text-align: center;'>Use our AI tools to analyze skill gaps, build the perfect resume, and track your applications.</p>",
+                "<p style='text-align: center; padding: 0 1rem;'>Use our AI tools to analyze skill gaps, build the perfect resume, and track applications.</p>",
                 unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown("</div>", unsafe_allow_html=True)  # End of how-it-works-section
-    st.markdown("##")
-
-    # --- 3. Features Highlight Section (with background color) ---
     st.markdown("<div class='features-section'>", unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align: center; color: #ffa500;'>Why Choose AVSAR AI?</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center;'>Why Choose AVSAR AI?</h2>", unsafe_allow_html=True)
     f_col1, f_col2, f_col3 = st.columns(3)
     with f_col1:
         with st.container(border=True):
@@ -177,7 +298,7 @@ if st.session_state.role is None:
         with st.container(border=True):
             st.markdown("<h4 style='text-align: center;'>✨ AI-Powered Tools</h4>", unsafe_allow_html=True)
             st.write("From resume building to interview prep, get an edge with our integrated generative AI features.")
-    st.markdown("</div>", unsafe_allow_html=True)  # End of features-section
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 # =================================================================================================
@@ -194,12 +315,12 @@ elif st.session_state.role == "Student":
     st.sidebar.markdown("---")
     st.sidebar.toggle("Simulate AVSAR Pro Access", key="pro_access", help="Turn this on to preview the Pro Dashboard!")
     st.sidebar.markdown("---")
-    with st.sidebar.expander("💡 How It Works?"):
+    with st.sidebar.expander("💡 About The Tech"):
         st.markdown("""
-        **AVSAR AI** uses a sophisticated approach to connect you with the right opportunities.
-        - **Recommendation Engine:** We use **TF-IDF** and **Cosine Similarity** to match your profile.
-        - **AI Resume Helper:** Our tool is powered by **Google's Generative AI**.
-        - **Data Analytics:** Insights are generated using **Pandas** and visualized with **Plotly**.
+        - **Engine:** TF-IDF & Cosine Similarity.
+        - **AI Helper:** Google's Generative AI.
+        - **Analytics:** Pandas & Plotly.
+        - **Resume Parser:** spaCy (NLP).
         """)
     st.sidebar.markdown("---")
 
@@ -221,27 +342,50 @@ elif st.session_state.role == "Student":
                         st.session_state.selected_student_name = selected_student_name
                         st.session_state.student_profile_set = True
                         st.rerun()
-                else:
+
+                elif profile_mode == "✨ Create New Profile":
                     with st.form("new_student_form"):
-                        name = st.text_input("Your Name")
-                        branch = st.text_input("Your Branch")
-                        skills = st.text_input("Your Skills (comma-separated)")
+                        st.markdown("#### Create Your Profile with AI")
+                        name = st.text_input("Your Name *")
+                        branch = st.text_input("Your Branch *")
                         location_preference = st.text_input("Preferred Location")
+                        resume_file = st.file_uploader("Upload Your Resume (PDF or DOCX) *", type=["pdf", "docx"])
                         submitted = st.form_submit_button("Find Internships", use_container_width=True, type="primary")
+
                         if submitted:
-                            new_profile = {"name": name, "branch": branch, "skills": skills,
-                                           "location_preference": location_preference, "cgpa": 8.0}
-                            st.session_state.newly_added_students.append(new_profile)
-                            st.session_state.student_index = None
-                            st.session_state.new_profile_data = new_profile
-                            st.session_state.selected_student_name = name
-                            st.session_state.student_profile_set = True
-                            st.rerun()
+                            if name and branch and resume_file:
+                                if not os.path.exists("temp_resumes"):
+                                    os.makedirs("temp_resumes")
+                                file_path = os.path.join("temp_resumes", resume_file.name)
+                                with open(file_path, "wb") as f:
+                                    f.write(resume_file.getbuffer())
+
+                                with st.spinner("🚀 Our AI is analyzing your resume..."):
+                                    extracted_skills = extract_skills_from_resume(file_path)
+                                    skills_str = ", ".join(extracted_skills)
+
+                                if not extracted_skills:
+                                    st.warning("Could not extract skills. Ensure your resume is text-based.")
+                                    skills_str = ""
+                                else:
+                                    st.success(f"✅ Found {len(extracted_skills)} skills in your resume!")
+
+                                new_profile = {
+                                    "name": name, "branch": branch, "skills": skills_str,
+                                    "location_preference": location_preference, "cgpa": 8.0
+                                }
+                                st.session_state.newly_added_students.append(new_profile)
+                                st.session_state.student_index = None
+                                st.session_state.new_profile_data = new_profile
+                                st.session_state.selected_student_name = name
+                                st.session_state.student_profile_set = True
+                                st.rerun()
+                            else:
+                                st.error("Please fill in your name, branch, and upload your resume.")
 
     # --- Step 2 for Student: Show Dashboard after profile is set ---
     else:
         if st.session_state.pro_access:
-            # --- AVSAR PRO DASHBOARD (RESTORED) ---
             st.title(f"🚀 AVSAR Pro Dashboard for {st.session_state.selected_student_name}")
             st.markdown("---")
             st.subheader("📊 Placement Readiness Dashboard")
@@ -282,13 +426,13 @@ elif st.session_state.role == "Student":
                     st.file_uploader("Upload your base resume to get started", type=['pdf', 'docx'])
                     st.button("Generate Tailored Resumes", key="resume_builder", use_container_width=True)
         else:
-            # --- FREE DASHBOARD ---
             if st.session_state.recommendations is None:
                 if st.session_state.student_index is not None:
                     st.session_state.recommendations = engine.get_recommendations(st.session_state.student_index)
                 else:
                     st.session_state.recommendations = engine.get_recommendations_for_new_profile(
                         st.session_state.new_profile_data)
+
             st.sidebar.header("🔍 Filters")
             all_states = ["All India"] + sorted(engine.internships_df['state'].unique().tolist())
             state_filter = st.sidebar.selectbox("State", options=all_states)
@@ -297,6 +441,7 @@ elif st.session_state.role == "Student":
                 cities_in_state = ["All Cities"] + sorted(
                     engine.internships_df[engine.internships_df['state'] == state_filter]['location'].unique().tolist())
                 city_filter = st.sidebar.selectbox("City", options=cities_in_state)
+
             if st.sidebar.button("Apply Filters", use_container_width=True):
                 with st.spinner("Updating..."):
                     if st.session_state.student_index is not None:
@@ -307,12 +452,14 @@ elif st.session_state.role == "Student":
                         st.session_state.recommendations = engine.get_recommendations_for_new_profile(
                             st.session_state.new_profile_data, state_filter=state_filter, city_filter=city_filter)
                     st.toast("Filters applied!", icon="✅")
+
             st.title(f"🎓 Dashboard for {st.session_state.selected_student_name}")
             rec_tab, app_tab, profile_tab = st.tabs(["🔍 Recommendations", "📝 My Applications", "👤 My Profile"])
+
             with rec_tab:
                 recs = st.session_state.recommendations
                 if recs.empty:
-                    st.warning("No internships found.")
+                    st.warning("No internships found matching your profile and filters.")
                 else:
                     for index, row in recs.iterrows():
                         with st.container(border=True, key=f"rec_{index}"):
@@ -331,9 +478,11 @@ elif st.session_state.role == "Student":
                             with col2:
                                 st.markdown(f"#### {row['domain']} at **{row['company']}**")
                                 st.write(f"**📍 Location:** {row['location']}, {row['state']}")
+
                             st.write(f"**💰 Stipend:** ₹{row.get('stipend', 'N/A')} / month")
                             st.write(f"**🔧 Required Skills:** `{row['required_skills']}`")
                             st.markdown("---")
+
                             b_col1, b_col2 = st.columns(2)
                             with b_col1:
                                 is_applied = any(app['internship_id'] == row['internship_id'] for app in
@@ -350,69 +499,65 @@ elif st.session_state.role == "Student":
                                     st.session_state.application_log.append(log_entry)
                                     st.toast(f"✅ Applied for {row['domain']}!", icon="🎉")
                             with b_col2:
-                                if st.button("Explore Tools", key=f"tools_{index}", use_container_width=True):
+                                if st.button("Explore AI Tools", key=f"tools_{index}", use_container_width=True):
                                     if st.session_state.selected_internship_index == index:
                                         st.session_state.selected_internship_index = None
                                     else:
                                         st.session_state.selected_internship_index = index
                                     st.session_state.skill_gap_result = None
                                     st.session_state.resume_suggestions = None
+
                             if st.session_state.selected_internship_index == index:
-                                exp_col1, exp_col2 = st.columns(2)
-                                with exp_col1:
-                                    st.info("Skill Gap Analysis")
-                                    if st.button("Analyze Skill Gap", key=f"gap_{index}", use_container_width=True):
-                                        with st.spinner("Analyzing..."):
-                                            if st.session_state.student_index is not None:
-                                                st.session_state.skill_gap_result = engine.get_skill_gap_analysis(
-                                                    st.session_state.student_index, index)
+                                st.markdown("---")
+                                tool_col1, tool_col2 = st.columns(2)
+                                with tool_col1:
+                                    with st.container(border=True):
+                                        st.markdown("<h6>Skill Gap Analysis</h6>", unsafe_allow_html=True)
+                                        if st.button("Analyze Skill Gap", key=f"gap_{index}", use_container_width=True):
+                                            with st.spinner("Analyzing..."):
+                                                if st.session_state.student_index is not None:
+                                                    st.session_state.skill_gap_result = engine.get_skill_gap_analysis(
+                                                        st.session_state.student_index, index)
+                                                else:
+                                                    st.session_state.skill_gap_result = engine.get_skill_gap_for_new_profile(
+                                                        st.session_state.new_profile_data, index)
+                                        if st.session_state.skill_gap_result:
+                                            res = st.session_state.skill_gap_result
+                                            st.metric(label="Your Skill Match", value=f"{res['match_percentage']:.2f}%")
+                                            st.progress(int(res['match_percentage']))
+                                            if not res['missing_skills']:
+                                                st.success("You have all required skills!")
                                             else:
-                                                st.session_state.skill_gap_result = engine.get_skill_gap_for_new_profile(
-                                                    st.session_state.new_profile_data, index)
-                                    if st.session_state.skill_gap_result:
-                                        res = st.session_state.skill_gap_result
-                                        st.metric(label="Your Skill Match", value=f"{res['match_percentage']:.2f}%")
-                                        st.progress(int(res['match_percentage']))
-                                        if not res['missing_skills']:
-                                            st.success("You have all required skills!")
-                                        else:
-                                            st.write("**❌ Missing Skills:**")
-                                            for skill in res['missing_skills']:
-                                                st.markdown(
-                                                    f"- {skill.replace('_', ' ').capitalize()} ([Learn]({res['learning_paths'].get(skill.capitalize(), '#')}))")
-                                with exp_col2:
-                                    st.info("AI Resume Helper")
-                                    if st.button("Generate Suggestions", key=f"resume_{index}",
-                                                 use_container_width=True, disabled=(not api_key)):
-                                        with st.spinner("Generating..."):
-                                            if st.session_state.student_index is not None:
-                                                st.session_state.resume_suggestions = engine.get_resume_suggestions(
-                                                    api_key, internship_index=index,
-                                                    student_index=st.session_state.student_index)
-                                            else:
-                                                st.session_state.resume_suggestions = engine.get_resume_suggestions(
-                                                    api_key, internship_index=index,
-                                                    new_profile_data=st.session_state.new_profile_data)
-                                    if st.session_state.resume_suggestions:
-                                        st.markdown(st.session_state.resume_suggestions)
-                                    if not api_key: st.warning("Add Google AI API key to enable.")
+                                                st.write("**❌ Missing Skills:**")
+                                                for skill in res['missing_skills']:
+                                                    st.markdown(
+                                                        f"- {skill.replace('_', ' ').capitalize()} ([Learn]({res['learning_paths'].get(skill.capitalize(), '#')}))")
+                                with tool_col2:
+                                    with st.container(border=True):
+                                        st.markdown("<h6>AI Resume Helper</h6>", unsafe_allow_html=True)
+                                        if st.button("Generate Suggestions", key=f"resume_{index}",
+                                                     use_container_width=True, disabled=(not api_key)):
+                                            with st.spinner("Generating..."):
+                                                if st.session_state.student_index is not None:
+                                                    st.session_state.resume_suggestions = engine.get_resume_suggestions(
+                                                        api_key, internship_index=index,
+                                                        student_index=st.session_state.student_index)
+                                                else:
+                                                    st.session_state.resume_suggestions = engine.get_resume_suggestions(
+                                                        api_key, internship_index=index,
+                                                        new_profile_data=st.session_state.new_profile_data)
+                                        if st.session_state.resume_suggestions:
+                                            st.markdown(st.session_state.resume_suggestions)
+                                        if not api_key: st.warning("Add Google AI API key to enable.")
+
             with app_tab:
                 st.header("My Application Status")
                 if not st.session_state.applications:
                     st.info("You haven't applied to any internships yet.")
                 else:
-                    for app in st.session_state.applications:
-                        with st.container(border=True):
-                            c1, c2 = st.columns([3, 1])
-                            c1.markdown(f"#### {app['Role']}")
-                            c1.markdown(f"**at {app['Company']}**")
-                            status = app['Status']
-                            if status == "Applied":
-                                c2.info(f"**Status:** {status}")
-                            elif status == "Under Review":
-                                c2.warning(f"**Status:** {status}")
-                            else:
-                                c2.success(f"**Status:** {status}")
+                    apps_df = pd.DataFrame(st.session_state.applications)
+                    st.dataframe(apps_df, use_container_width=True)
+
             with profile_tab:
                 st.header("My Skill Profile")
                 if st.session_state.student_index is not None:
@@ -449,7 +594,6 @@ elif st.session_state.role == "Student":
                         updated_skills = st.text_area("Skills (comma-separated)", value=student_info.get('skills', ''))
                         updated_location = st.text_input("Location Preference",
                                                          value=student_info.get('location_preference', ''))
-
                         submitted = st.form_submit_button("Save Changes")
                         if submitted:
                             updated_data = {
@@ -479,11 +623,11 @@ elif st.session_state.role == "Admin":
         for key in st.session_state.keys():
             del st.session_state[key]
         st.rerun()
-    with st.sidebar.expander("💡 How It Works?"):
+    with st.sidebar.expander("💡 About The Tech"):
         st.markdown("""
-        - **Recommendation Engine:** Uses TF-IDF and Cosine Similarity.
-        - **AI Resume Helper:** Powered by Google's Generative AI.
-        - **Data Analytics:** Insights using Pandas and Plotly.
+        - **Engine:** TF-IDF & Cosine Similarity.
+        - **AI Helper:** Google's Generative AI.
+        - **Analytics:** Pandas & Plotly.
         """)
     st.header("💼 Talent Insights & Analytics")
     original_student_count = engine.students_df.shape[0]
@@ -499,6 +643,7 @@ elif st.session_state.role == "Admin":
     st.divider()
     admin_tab1, admin_tab2, admin_tab3, admin_tab4 = st.tabs(
         ["📊 Market Overview", "🧑‍💻 Talent Search & Gaps", "🔥 Dynamic Talent Heatmap", "🔔 Live Application Feed"])
+
     with admin_tab1:
         st.subheader("Overview of the Internship Market")
         col1, col2 = st.columns(2)
@@ -515,6 +660,7 @@ elif st.session_state.role == "Admin":
                              title="Top 10 Companies by Number of Internships",
                              labels={'x': 'Company', 'y': 'Number of Internships'})
             st.plotly_chart(fig_bar, use_container_width=True)
+
     with admin_tab2:
         colA, colB = st.columns(2)
         with colA:
@@ -543,6 +689,7 @@ elif st.session_state.role == "Admin":
                     st.write("**Top 10 Skill Gaps (High Demand, Low Supply):**")
                     st.dataframe(st.session_state.skill_gap_report[['skill', 'gap_score']].set_index('skill'),
                                  use_container_width=True)
+
     with admin_tab3:
         st.subheader("Dynamic Talent Heatmap by Location & Skills")
         all_skills_list = sorted(list(engine.skills_vocabulary))
@@ -561,6 +708,7 @@ elif st.session_state.role == "Admin":
                                     text_auto=True, title="Concentration of Key Skills by Location",
                                     color_continuous_scale='Purples')
             st.plotly_chart(fig_heatmap, use_container_width=True)
+
     with admin_tab4:
         st.subheader("Live Application Feed")
         if not st.session_state.application_log:
@@ -568,5 +716,3 @@ elif st.session_state.role == "Admin":
         else:
             log_df = pd.DataFrame(st.session_state.application_log)
             st.dataframe(log_df.sort_values(by="Applied At", ascending=False), use_container_width=True)
-
-
